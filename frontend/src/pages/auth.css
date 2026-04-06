@@ -1,0 +1,62 @@
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  background-image: url('https://static.vecteezy.com/system/resources/thumbnails/024/948/088/small_2x/loan-or-lending-cash-to-buy-asset-concept-business-woman-hand-holding-piggy-bank-with-loan-or-lending-cash-icon-on-virtual-screen-photo.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding: 20px 20px 20px 10%;
+  position: relative;
+}
+
+.auth-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 1;
+}
+
+.auth-card {
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 10px;
+  padding: 48px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  max-width: 400px;
+  position: relative;
+  z-index: 2;
+  backdrop-filter: blur(15px);
+}
+
+.auth-card h1 {
+  font-size: 32px;
+  color: var(--primary-color);
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.auth-card h2 {
+  font-size: 24px;
+  color: var(--dark-text);
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.auth-footer {
+  text-align: center;
+  margin-top: 24px;
+  color: var(--secondary-color);
+  font-size: 14px;
+}
+
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 32px 24px;
+  }
+}
