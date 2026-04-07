@@ -1,20 +1,20 @@
 /* Global Styles */
 :root {
-  --primary-color: #1f3b5b;
-  --primary-dark: #162a40;
+  --primary-color: #1e3a5f;
+  --primary-dark: #14263e;
   --secondary-color: #4b5563;
-  --success-color: #2f855a;
+  --success-color: #1f7a4f;
   --danger-color: #b42318;
-  --warning-color: #b7791f;
-  --light-bg: #f3f4f6;
-  --dark-text: #111827;
-  --border-color: #e2e8f0;
-  --shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
-  --gradient-primary: linear-gradient(135deg, #1f3b5b 0%, #2d4a6b 100%);
-  --gradient-success: linear-gradient(135deg, #2f855a 0%, #276749 100%);
-  --gradient-warning: linear-gradient(135deg, #b7791f 0%, #975a16 100%);
-  --gradient-danger: linear-gradient(135deg, #b42318 0%, #912018 100%);
+  --warning-color: #9a6700;
+  --light-bg: #f5f7fb;
+  --dark-text: #0f172a;
+  --border-color: #d9e2ec;
+  --shadow: 0 1px 2px rgba(2, 6, 23, 0.06), 0 1px 3px rgba(2, 6, 23, 0.08);
+  --shadow-lg: 0 12px 32px rgba(2, 6, 23, 0.12);
+  --gradient-primary: linear-gradient(135deg, #1e3a5f 0%, #264a76 100%);
+  --gradient-success: linear-gradient(135deg, #1f7a4f 0%, #17623f 100%);
+  --gradient-warning: linear-gradient(135deg, #9a6700 0%, #7a5000 100%);
+  --gradient-danger: linear-gradient(135deg, #b42318 0%, #8f1c14 100%);
 }
 
 * {
@@ -82,37 +82,18 @@ body {
   text-decoration: none;
   display: inline-block;
   text-align: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.btn::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.3);
-  transform: translate(-50%, -50%);
-  transition: width 0.6s, height 0.6s;
-}
-
-.btn:active::before {
-  width: 300px;
-  height: 300px;
+  letter-spacing: 0.2px;
 }
 
 .btn-primary {
   background: var(--gradient-primary);
   color: white;
-  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 14px rgba(30, 58, 95, 0.28);
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 8px 20px rgba(30, 58, 95, 0.34);
 }
 
 .btn-secondary {
@@ -182,7 +163,19 @@ body {
 .form-group textarea:focus {
   outline: none;
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.16);
+}
+
+.input-error {
+  border-color: var(--danger-color) !important;
+  background-color: #fff6f6;
+}
+
+.field-error {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--danger-color);
+  font-weight: 500;
 }
 
 /* Tables */
