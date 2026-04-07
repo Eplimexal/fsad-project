@@ -18,7 +18,7 @@ export const Login = () => {
   const [touched, setTouched] = useState({});
   const [apiError, setApiError] = useState('');
 
-  const hasErrors = useMemo(() => Object.keys(errors).length > 0, [errors]);
+  const hasErrors = useMemo(() => Object.values(errors).some(Boolean), [errors]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
