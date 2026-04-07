@@ -1,10 +1,17 @@
 package com.fsad.model;
 
+import jakarta.persistence.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
+@Entity
+@Table(name = "loans")
 public class Loan {
+    @Id
+    @Column(length = 40)
     private String id;
+
     private String borrowerId;
     private String lenderId;
     private double amount;
@@ -14,6 +21,9 @@ public class Loan {
     private String issueDate;
     private String dueDate;
     private double remainingAmount;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "loanId", referencedColumnName = "id")
     private List<Payment> payments = new ArrayList<>();
 
     public String getId() { return id; }

@@ -1,7 +1,17 @@
 package com.fsad.model;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "loan_applications")
 public class LoanApplication {
+    @Id
+    @Column(length = 40)
     private String id;
+
     private String borrowerId;
     private String borrowerName;
     private String lenderId;
@@ -9,7 +19,11 @@ public class LoanApplication {
     private double interestRate;
     private int tenure;
     private String status;
+
+    @Column(length = 255)
     private String purpose;
+
+    @Column(length = 64)
     private String appliedAt;
 
     public String getId() { return id; }

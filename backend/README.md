@@ -1,4 +1,16 @@
-# Backend (Spring Boot)
+# Backend (Spring Boot + MySQL)
+
+## Local DB defaults (MySQL Workbench Local Instance)
+
+By default, backend expects:
+
+- Host: `localhost`
+- Port: `3306`
+- Username: `root`
+- Password: `root`
+- Database: `loanhub`
+
+It uses JDBC URL with `createDatabaseIfNotExist=true`, so the DB is automatically created when missing.
 
 ## Run backend
 
@@ -15,18 +27,20 @@ sh mvnw spring-boot:run
 
 ## Seeded users
 
+If DB tables are empty, backend auto-seeds:
+
 - `admin@example.com` / `password123`
 - `lender@example.com` / `password123`
 - `borrower@example.com` / `password123`
 - `analyst@example.com` / `password123`
 
-## Implemented modules
+## Deploy/server overrides
 
-- JWT authentication (`/api/auth/login`, `/api/auth/register`, `/api/auth/me`)
-- Loan offers, applications, approvals/rejections, payments
-- Role checks for lender/borrower/admin actions
-- CORS for frontend origin
+Use env vars on server/deployment:
 
-## Notes
-
-Data is in-memory for now (non-persistent) to provide immediate functional parity with the frontend contract.
+- `DB_URL`
+- `DB_USERNAME`
+- `DB_PASSWORD`
+- `APP_CORS_ALLOWED_ORIGINS`
+- `APP_JWT_SECRET`
+- `SERVER_PORT`

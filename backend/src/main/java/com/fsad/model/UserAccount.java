@@ -1,10 +1,25 @@
 package com.fsad.model;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "users")
 public class UserAccount {
+    @Id
+    @Column(length = 32)
     private String id;
+
+    @Column(nullable = false)
     private String name;
+
+    @Column(nullable = false, unique = true)
     private String email;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private Role role;
+
+    @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
     public UserAccount() {}

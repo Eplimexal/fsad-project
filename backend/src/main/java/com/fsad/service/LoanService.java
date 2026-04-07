@@ -4,6 +4,9 @@ import com.fsad.model.Loan;
 import com.fsad.model.LoanApplication;
 import com.fsad.model.LoanOffer;
 import com.fsad.model.Payment;
+import com.fsad.repository.LoanApplicationRepository;
+import com.fsad.repository.LoanOfferRepository;
+import com.fsad.repository.LoanRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -18,18 +21,26 @@ import java.util.Map;
 @Service
 public class LoanService {
 
-    private final InMemoryStore store;
+    private final LoanRepository loanRepository;
+    private final LoanOfferRepository offerRepository;
+    private final LoanApplicationRepository applicationRepository;
 
-    public LoanService(InMemoryStore store) {
-        this.store = store;
+    public LoanService(
+            LoanRepository loanRepository,
+            LoanOfferRepository offerRepository,
+            LoanApplicationRepository applicationRepository
+    ) {
+        this.loanRepository = loanRepository;
+        this.offerRepository = offerRepository;
+        this.applicationRepository = applicationRepository;
     }
 
     public List<Loan> getLoans() {
-        return store.loansSnapshot();
+        return loanRepository.findAll();
     }
 
     public List<LoanOffer> getOffers() {
-        return store.offers();
+        return offerRepository.findAll();
     }
 
     public LoanOffer createOffer(LoanOffer input) {
@@ -43,12 +54,11 @@ public class LoanService {
         offer.setTenure(input.getTenure());
         offer.setStatus(input.getStatus() == null ? "active" : input.getStatus().toLowerCase(Locale.ROOT));
         offer.setCreatedAt(OffsetDateTime.now().toString());
-        store.offers().add(offer);
-        return offer;
+        return offerRepository.save(offer);
     }
 
     public List<LoanApplication> getApplications() {
-        return store.applications();
+        return applicationRepository.findAll();
     }
 
     public LoanApplication createApplication(LoanApplication input) {
@@ -62,14 +72,14 @@ public class LoanService {
         app.setPurpose(input.getPurpose());
         app.setStatus("pending");
         app.setAppliedAt(OffsetDateTime.now().toString());
-        store.applications().add(app);
-        return app;
+        return applicationRepository.save(app);
     }
 
     public Map<String, Object> approveApplication(String appId, String lenderId) {
         LoanApplication app = findApplication(appId);
         app.setStatus("approved");
         app.setLenderId(lenderId);
+        applicationRepository.save(app);
 
         Loan loan = new Loan();
         loan.setId("L-" + System.currentTimeMillis());
@@ -83,22 +93,22 @@ public class LoanService {
         loan.setDueDate(LocalDate.now().plusMonths(app.getTenure()).toString());
         loan.setRemainingAmount(app.getLoanAmount());
 
-        store.loans().add(loan);
+        Loan savedLoan = loanRepository.save(loan);
 
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("application", app);
-        result.put("loan", loan);
+        result.put("loan", savedLoan);
         return result;
     }
 
     public LoanApplication rejectApplication(String appId) {
         LoanApplication app = findApplication(appId);
         app.setStatus("rejected");
-        return app;
+        return applicationRepository.save(app);
     }
 
     public Loan addPayment(String loanId, Payment paymentPayload) {
-        Loan loan = store.loans().stream().filter(item -> item.getId().equals(loanId)).findFirst()
+        Loan loan = loanRepository.findById(loanId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Loan not found"));
 
         Payment payment = new Payment();
@@ -106,6 +116,7 @@ public class LoanService {
         payment.setAmount(paymentPayload.getAmount());
         payment.setDate(paymentPayload.getDate() == null ? LocalDate.now().toString() : paymentPayload.getDate());
         payment.setStatus(paymentPayload.getStatus() == null ? "completed" : paymentPayload.getStatus());
+        payment.setLoanId(loan.getId());
 
         loan.getPayments().add(payment);
         loan.setRemainingAmount(Math.max(0, loan.getRemainingAmount() - payment.getAmount()));
@@ -113,11 +124,11 @@ public class LoanService {
             loan.setStatus("completed");
         }
 
-        return loan;
+        return loanRepository.save(loan);
     }
 
     private LoanApplication findApplication(String appId) {
-        return store.applications().stream().filter(item -> item.getId().equals(appId)).findFirst()
+        return applicationRepository.findById(appId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found"));
     }
 }

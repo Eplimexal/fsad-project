@@ -1,11 +1,10 @@
-# LoanHub Full-Stack Project (React + Spring Boot)
+# LoanHub Full-Stack Project (React + Spring Boot + MySQL)
 
-This repository now runs as:
+This repository runs as:
 
 - **Frontend:** React + Vite in `frontend/`
 - **Backend:** Spring Boot REST API in `backend/`
-
-The old mock backend under `frontend/backend` and offline localStorage fallback logic have been removed.
+- **Database (local):** MySQL Local Instance (`root` / `root`) with auto-create DB
 
 ## 1) Quick Start (Run Both Apps)
 
@@ -13,32 +12,25 @@ The old mock backend under `frontend/backend` and offline localStorage fallback 
 
 - Node.js 20+
 - Java 21+
-- Maven wrapper (already included in `backend/mvnw`)
+- MySQL Server running locally (MySQL Workbench Local Instance)
 
-## Step A — Start the backend
+## Step A — Start backend
 
 ```bash
 cd backend
 sh mvnw spring-boot:run
 ```
 
-Backend runs at `http://localhost:8080` and API at `http://localhost:8080/api`.
+Backend uses by default:
 
-Health check:
+- DB URL: `jdbc:mysql://localhost:3306/loanhub?createDatabaseIfNotExist=true...`
+- DB username/password: `root` / `root`
 
-```bash
-curl http://localhost:8080/api/health
-```
+If `loanhub` DB does not exist, it is created automatically.
 
-Expected response:
+## Step B — Start frontend
 
-```json
-{"status":"ok"}
-```
-
-## Step B — Start the frontend
-
-Open a second terminal:
+Open second terminal:
 
 ```bash
 cd frontend
@@ -49,43 +41,20 @@ npm run dev
 
 Frontend runs at `http://localhost:5173`.
 
-## Step C — Test login flow
+## Step C — Verify
 
-Use one of the seeded backend accounts:
+- Health: `curl http://localhost:8080/api/health`
+- Login with seeded users (`admin@example.com`, `lender@example.com`, `borrower@example.com`, `analyst@example.com`) using password `password123`.
 
-- Admin: `admin@example.com`
-- Lender: `lender@example.com`
-- Borrower: `borrower@example.com`
-- Analyst: `analyst@example.com`
-- Password for all: `password123`
+## 2) Persistence behavior
 
-After login, each role should navigate to its dashboard.
+- Data is now persisted in MySQL (users, offers, applications, loans, payments).
+- New registrations and loan workflow data are saved to DB.
+- On startup, seed data is added only when tables are empty.
 
-## 2) API Contract (Implemented)
+## 3) Deployment configuration
 
-### Auth
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-- `GET /api/auth/me`
+For server/deployment, override DB and app settings with env vars:
 
-### Loan domain
-- `GET /api/loans`
-- `GET /api/offers`
-- `POST /api/offers`
-- `GET /api/applications`
-- `POST /api/applications`
-- `PUT /api/applications/{id}/approve`
-- `PUT /api/applications/{id}/reject`
-- `POST /api/loans/{id}/payments`
-
-All protected endpoints require:
-
-```http
-Authorization: Bearer <token>
-```
-
-## 3) Notes
-
-- Swagger UI: `http://localhost:8080/swagger-ui/index.html`
-- CORS is configured for `http://localhost:5173` by default.
-- This backend currently uses in-memory storage with seeded data (non-persistent). Restarting backend resets data.
+- `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`
+- `APP_CORS_ALLOWED_ORIGINS`, `APP_JWT_SECRET`, `SERVER_PORT`
