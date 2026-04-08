@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -66,6 +66,17 @@ export const loanApi = {
 
   async addPayment(loanId, payment) {
     const { data } = await api.post(`/loans/${loanId}/payments`, payment);
+    return data;
+  },
+};
+
+export const adminApi = {
+  async getUsers() {
+    const { data } = await api.get('/admin/users');
+    return data;
+  },
+  async createUser(payload) {
+    const { data } = await api.post('/admin/users', payload);
     return data;
   },
 };
