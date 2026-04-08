@@ -7,6 +7,13 @@ import { adminApi } from '../../services/api';
 import { formatCurrency } from '../../utils/currencyFormatter';
 import './dashboard.css';
 
+const seededUsers = [
+  { id: 'U-ADMIN', name: 'Admin User', email: 'admin@example.com', role: 'admin', status: 'active' },
+  { id: 'U-LENDER', name: 'John Doe', email: 'lender@example.com', role: 'lender', status: 'active' },
+  { id: 'U-BORROWER', name: 'Jane Smith', email: 'borrower@example.com', role: 'borrower', status: 'active' },
+  { id: 'U-ANALYST', name: 'Finance Analyst', email: 'analyst@example.com', role: 'analyst', status: 'active' },
+];
+
 export const AdminDashboard = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
