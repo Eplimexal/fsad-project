@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AuthContext } from './authContextObject';
 import { authApi } from '../services/api';
 
@@ -9,7 +9,36 @@ const getStoredUser = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(getStoredUser);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const bootstrap = async () => {
+      const token = localStorage.getItem('token');
+      const storedUser = getStoredUser();
+
+      if (!token || !storedUser) {
+        setUser(null);
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const freshUser = await authApi.getMe();
+        setUser(freshUser);
+        localStorage.setItem('user', JSON.stringify(freshUser));
+      } catch {
+        setUser(null);
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    bootstrap();
+  }, []);
 
   const login = async (credentials) => {
     setLoading(true);
