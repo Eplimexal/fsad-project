@@ -70,4 +70,15 @@ export const loanApi = {
   },
 };
 
+export const adminApi = {
+  async getUsers() {
+    const { data } = await api.get('/admin/users');
+    return data;
+  },
+  async createUser(payload) {
+    const { data } = await api.post('/admin/users', payload);
+    return data;
+  },
+};
+
 export default api;

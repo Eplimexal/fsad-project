@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
@@ -31,22 +32,18 @@ public class AuthService {
     }
 
     public AuthResponse register(RegisterRequest request) {
-        String normalizedEmail = request.getEmail().toLowerCase(Locale.ROOT).trim();
-        if (userRepository.existsByEmailIgnoreCase(normalizedEmail)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already exists");
-        }
-
         Role role = request.getRole() == null ? Role.BORROWER : Role.from(request.getRole());
-        UserAccount user = new UserAccount(
-                "U-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase(Locale.ROOT),
-                request.getName().trim(),
-                normalizedEmail,
-                role,
-                passwordEncoder.encode(request.getPassword())
-        );
-
-        userRepository.save(user);
+        UserAccount user = createUser(request.getName(), request.getEmail(), request.getPassword(), role);
         return new AuthResponse(toSafeUser(user), jwtService.generateToken(user));
+    }
+
+    public Map<String, Object> createUserByAdmin(String name, String email, String password, String role) {
+        UserAccount user = createUser(name, email, password, Role.from(role));
+        return toSafeUser(user);
+    }
+
+    public List<Map<String, Object>> listUsers() {
+        return userRepository.findAll().stream().map(this::toSafeUser).toList();
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -76,6 +73,23 @@ public class AuthService {
         safeUser.put("name", user.getName());
         safeUser.put("email", user.getEmail());
         safeUser.put("role", user.getRole().toApiValue());
+        safeUser.put("status", "active");
         return safeUser;
+    }
+
+    private UserAccount createUser(String name, String email, String password, Role role) {
+        String normalizedEmail = email.toLowerCase(Locale.ROOT).trim();
+        if (userRepository.existsByEmailIgnoreCase(normalizedEmail)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already exists");
+        }
+
+        UserAccount user = new UserAccount(
+                "U-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase(Locale.ROOT),
+                name.trim(),
+                normalizedEmail,
+                role,
+                passwordEncoder.encode(password)
+        );
+        return userRepository.save(user);
     }
 }

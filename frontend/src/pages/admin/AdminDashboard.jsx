@@ -1,9 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useLoan } from '../../hooks/useLoan';
 import { Header, Sidebar, PageLayout, StatCard, Modal } from '../../components/Layout';
-import { authApi } from '../../services/api';
+import { adminApi } from '../../services/api';
 import { formatCurrency } from '../../utils/currencyFormatter';
 import './dashboard.css';
 
@@ -21,12 +21,23 @@ export const AdminDashboard = () => {
 
   const [activeSection, setActiveSection] = useState('overview');
   const [showUserModal, setShowUserModal] = useState(false);
-  const [newUser, setNewUser] = useState({ name: '', email: '', role: 'borrower' });
-  const [createdUsers, setCreatedUsers] = useState([]);
+  const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'borrower' });
+  const [users, setUsers] = useState([]);
   const [actionError, setActionError] = useState('');
   const [actionSuccess, setActionSuccess] = useState('');
 
-  const users = useMemo(() => [...seededUsers, ...createdUsers], [createdUsers]);
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const data = await adminApi.getUsers();
+        setUsers(data);
+      } catch (err) {
+        setActionError(err?.response?.data?.message || err?.message || 'Unable to load users.');
+      }
+    };
+
+    loadUsers();
+  }, []);
 
   const totalDisbursed = loans.reduce((sum, loan) => sum + Number(loan.amount || 0), 0);
   const pendingApplications = applications.filter((app) => app.status === 'pending');
@@ -35,22 +46,27 @@ export const AdminDashboard = () => {
     setActionError('');
     setActionSuccess('');
 
-    if (!newUser.name || !newUser.email) {
-      setActionError('Name and email are required to create a user.');
+    if (!newUser.name || !newUser.email || !newUser.password) {
+      setActionError('Name, email, and password are required.');
+      return;
+    }
+
+    if (newUser.password.length < 6) {
+      setActionError('Password must be at least 6 characters.');
       return;
     }
 
     try {
-      const response = await authApi.register({
+      const createdUser = await adminApi.createUser({
         name: newUser.name.trim(),
         email: newUser.email.trim(),
-        password: 'password123',
+        password: newUser.password,
         role: newUser.role,
       });
 
-      setCreatedUsers((prev) => [...prev, { ...response.user, status: 'active' }]);
-      setActionSuccess(`User ${response.user.name} created successfully.`);
-      setNewUser({ name: '', email: '', role: 'borrower' });
+      setUsers((prev) => [...prev, createdUser]);
+      setActionSuccess(`User ${createdUser.name} created successfully.`);
+      setNewUser({ name: '', email: '', password: '', role: 'borrower' });
       setShowUserModal(false);
     } catch (err) {
       setActionError(err?.response?.data?.message || err?.message || 'Unable to create user.');
@@ -86,7 +102,7 @@ export const AdminDashboard = () => {
 
   const sidebarItems = [
     { id: 'overview', label: 'Dashboard Overview' },
-    { id: 'users', label: 'User Onboarding' },
+    { id: 'users', label: 'User Management' },
     { id: 'applications', label: 'Applications Control' },
     { id: 'reports', label: 'System Insights' },
   ];
@@ -146,9 +162,9 @@ export const AdminDashboard = () => {
           {activeSection === 'users' && (
             <div>
               <div className="flex-between mb-2">
-                <h2>User Onboarding</h2>
+                <h2>User Management</h2>
                 <button className="btn btn-primary" onClick={() => setShowUserModal(true)}>
-                  + Create User Account
+                  + Add User
                 </button>
               </div>
 
@@ -169,7 +185,7 @@ export const AdminDashboard = () => {
                         <td>{account.email}</td>
                         <td style={{ textTransform: 'capitalize' }}>{account.role}</td>
                         <td>
-                          <span className="badge badge-active">{account.status}</span>
+                          <span className="badge badge-active">{account.status || 'active'}</span>
                         </td>
                       </tr>
                     ))}
@@ -267,14 +283,14 @@ export const AdminDashboard = () => {
         </PageLayout>
       </div>
 
-      <Modal isOpen={showUserModal} onClose={() => setShowUserModal(false)} title="Create User Account">
+      <Modal isOpen={showUserModal} onClose={() => setShowUserModal(false)} title="Add New User">
         <div className="form-group">
           <label>Name</label>
           <input
             type="text"
             value={newUser.name}
             onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
-            placeholder="Enter full name"
+            placeholder="Enter user name"
           />
         </div>
         <div className="form-group">
@@ -287,6 +303,15 @@ export const AdminDashboard = () => {
           />
         </div>
         <div className="form-group">
+          <label>Password</label>
+          <input
+            type="password"
+            value={newUser.password}
+            onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+            placeholder="Enter temporary password"
+          />
+        </div>
+        <div className="form-group">
           <label>Role</label>
           <select value={newUser.role} onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}>
             <option value="borrower">Borrower</option>
@@ -295,11 +320,8 @@ export const AdminDashboard = () => {
             <option value="analyst">Financial Analyst</option>
           </select>
         </div>
-        <p style={{ color: 'var(--secondary-color)', fontSize: '12px', marginBottom: '12px' }}>
-          New user will be created with default password <strong>password123</strong>.
-        </p>
         <button className="btn btn-primary" onClick={handleAddUser} style={{ width: '100%' }}>
-          Create User
+          Add User
         </button>
       </Modal>
     </div>
