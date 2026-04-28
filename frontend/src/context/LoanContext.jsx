@@ -7,21 +7,38 @@ export const LoanProvider = ({ children }) => {
   const [loanOffers, setLoanOffers] = useState([]);
   const [applications, setApplications] = useState([]);
 
-  useEffect(() => {
-    const bootstrap = async () => {
-      const data = await loanApi.getDashboardData();
-      setLoans(data.loans);
-      setLoanOffers(data.loanOffers);
-      setApplications(data.applications);
-    };
+  const refreshDashboardData = async () => {
+    const data = await loanApi.getDashboardData();
+    setLoans(data.loans);
+    setLoanOffers(data.loanOffers);
+    setApplications(data.applications);
+  };
 
-    bootstrap();
+  useEffect(() => {
+    refreshDashboardData();
+
+    const intervalId = setInterval(() => {
+      refreshDashboardData();
+    }, 15000);
+
+    return () => clearInterval(intervalId);
   }, []);
 
   const createLoanOffer = async (offer) => {
     const newOffer = await loanApi.createLoanOffer(offer);
     setLoanOffers((prev) => [...prev, newOffer]);
     return newOffer;
+  };
+
+  const updateLoanOffer = async (offerId, offer) => {
+    const updatedOffer = await loanApi.updateLoanOffer(offerId, offer);
+    setLoanOffers((prev) => prev.map((existingOffer) => (existingOffer.id === offerId ? updatedOffer : existingOffer)));
+    return updatedOffer;
+  };
+
+  const deleteLoanOffer = async (offerId) => {
+    await loanApi.deleteLoanOffer(offerId);
+    setLoanOffers((prev) => prev.filter((offer) => offer.id !== offerId));
   };
 
   const createLoanApplication = async (application) => {
@@ -54,11 +71,14 @@ export const LoanProvider = ({ children }) => {
     loanOffers,
     applications,
     createLoanOffer,
+    updateLoanOffer,
+    deleteLoanOffer,
     createLoanApplication,
     approveLoan,
     rejectApplication,
     addPayment,
     calculateInterest,
+    refreshDashboardData,
   };
 
   return <LoanContext.Provider value={value}>{children}</LoanContext.Provider>;

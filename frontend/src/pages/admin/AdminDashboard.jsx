@@ -7,13 +7,6 @@ import { adminApi } from '../../services/api';
 import { formatCurrency } from '../../utils/currencyFormatter';
 import './dashboard.css';
 
-const seededUsers = [
-  { id: 'U-ADMIN', name: 'Admin User', email: 'admin@example.com', role: 'admin', status: 'active' },
-  { id: 'U-LENDER', name: 'John Doe', email: 'lender@example.com', role: 'lender', status: 'active' },
-  { id: 'U-BORROWER', name: 'Jane Smith', email: 'borrower@example.com', role: 'borrower', status: 'active' },
-  { id: 'U-ANALYST', name: 'Finance Analyst', email: 'analyst@example.com', role: 'analyst', status: 'active' },
-];
-
 export const AdminDashboard = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -25,6 +18,8 @@ export const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
   const [actionError, setActionError] = useState('');
   const [actionSuccess, setActionSuccess] = useState('');
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingUser, setEditingUser] = useState({ id: '', name: '', email: '', role: 'borrower', password: '' });
 
   useEffect(() => {
     const loadUsers = async () => {
@@ -37,6 +32,8 @@ export const AdminDashboard = () => {
     };
 
     loadUsers();
+    const intervalId = setInterval(loadUsers, 15000);
+    return () => clearInterval(intervalId);
   }, []);
 
   const totalDisbursed = loans.reduce((sum, loan) => sum + Number(loan.amount || 0), 0);
@@ -70,6 +67,61 @@ export const AdminDashboard = () => {
       setShowUserModal(false);
     } catch (err) {
       setActionError(err?.response?.data?.message || err?.message || 'Unable to create user.');
+    }
+  };
+
+
+  const handleOpenEdit = (account) => {
+    setEditingUser({
+      id: account.id,
+      name: account.name,
+      email: account.email,
+      role: account.role,
+      password: '',
+    });
+    setShowEditModal(true);
+  };
+
+  const handleUpdateUser = async () => {
+    setActionError('');
+    setActionSuccess('');
+
+    if (!editingUser.name || !editingUser.email) {
+      setActionError('Name and email are required.');
+      return;
+    }
+
+    if (editingUser.password && editingUser.password.length < 6) {
+      setActionError('Updated password must be at least 6 characters.');
+      return;
+    }
+
+    try {
+      const updatedUser = await adminApi.updateUser(editingUser.id, {
+        name: editingUser.name.trim(),
+        email: editingUser.email.trim(),
+        role: editingUser.role,
+        password: editingUser.password || undefined,
+      });
+
+      setUsers((prev) => prev.map((account) => (account.id === updatedUser.id ? updatedUser : account)));
+      setActionSuccess(`User ${updatedUser.name} updated successfully.`);
+      setShowEditModal(false);
+    } catch (err) {
+      setActionError(err?.response?.data?.message || err?.message || 'Unable to update user.');
+    }
+  };
+
+  const handleDeleteUser = async (userId) => {
+    setActionError('');
+    setActionSuccess('');
+
+    try {
+      await adminApi.deleteUser(userId);
+      setUsers((prev) => prev.filter((account) => account.id !== userId));
+      setActionSuccess('User deleted successfully.');
+    } catch (err) {
+      setActionError(err?.response?.data?.message || err?.message || 'Unable to delete user.');
     }
   };
 
@@ -176,6 +228,7 @@ export const AdminDashboard = () => {
                       <th>Email</th>
                       <th>Role</th>
                       <th>Status</th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -186,6 +239,16 @@ export const AdminDashboard = () => {
                         <td style={{ textTransform: 'capitalize' }}>{account.role}</td>
                         <td>
                           <span className="badge badge-active">{account.status || 'active'}</span>
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <button className="btn btn-secondary btn-sm" onClick={() => handleOpenEdit(account)}>
+                              Edit
+                            </button>
+                            <button className="btn btn-danger btn-sm" onClick={() => handleDeleteUser(account.id)}>
+                              Delete
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -324,6 +387,50 @@ export const AdminDashboard = () => {
           Add User
         </button>
       </Modal>
+
+
+      <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} title="Edit User">
+        <div className="form-group">
+          <label>Name</label>
+          <input
+            type="text"
+            value={editingUser.name}
+            onChange={(e) => setEditingUser({ ...editingUser, name: e.target.value })}
+            placeholder="Enter user name"
+          />
+        </div>
+        <div className="form-group">
+          <label>Email</label>
+          <input
+            type="email"
+            value={editingUser.email}
+            onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
+            placeholder="Enter user email"
+          />
+        </div>
+        <div className="form-group">
+          <label>New Password (optional)</label>
+          <input
+            type="password"
+            value={editingUser.password}
+            onChange={(e) => setEditingUser({ ...editingUser, password: e.target.value })}
+            placeholder="Leave blank to keep current password"
+          />
+        </div>
+        <div className="form-group">
+          <label>Role</label>
+          <select value={editingUser.role} onChange={(e) => setEditingUser({ ...editingUser, role: e.target.value })}>
+            <option value="borrower">Borrower</option>
+            <option value="lender">Lender</option>
+            <option value="admin">Admin</option>
+            <option value="analyst">Financial Analyst</option>
+          </select>
+        </div>
+        <button className="btn btn-primary" onClick={handleUpdateUser} style={{ width: '100%' }}>
+          Update User
+        </button>
+      </Modal>
+
     </div>
   );
 };

@@ -46,6 +46,35 @@ public class AuthService {
         return userRepository.findAll().stream().map(this::toSafeUser).toList();
     }
 
+    public Map<String, Object> updateUserByAdmin(String userId, String name, String email, String role, String password) {
+        UserAccount user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        String normalizedEmail = email.toLowerCase(Locale.ROOT).trim();
+        userRepository.findByEmailIgnoreCase(normalizedEmail)
+                .filter(existing -> !existing.getId().equals(userId))
+                .ifPresent(existing -> {
+                    throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already exists");
+                });
+
+        user.setName(name.trim());
+        user.setEmail(normalizedEmail);
+        user.setRole(Role.from(role));
+
+        if (password != null && !password.isBlank()) {
+            user.setPasswordHash(passwordEncoder.encode(password));
+        }
+
+        return toSafeUser(userRepository.save(user));
+    }
+
+    public void deleteUserByAdmin(String userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+        }
+        userRepository.deleteById(userId);
+    }
+
     public AuthResponse login(LoginRequest request) {
         UserAccount user = userRepository.findByEmailIgnoreCase(request.getEmail())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));

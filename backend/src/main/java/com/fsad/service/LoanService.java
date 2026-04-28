@@ -8,6 +8,7 @@ import com.fsad.repository.LoanApplicationRepository;
 import com.fsad.repository.LoanOfferRepository;
 import com.fsad.repository.LoanRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -17,6 +18,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class LoanService {
@@ -55,6 +58,31 @@ public class LoanService {
         offer.setStatus(input.getStatus() == null ? "active" : input.getStatus().toLowerCase(Locale.ROOT));
         offer.setCreatedAt(OffsetDateTime.now().toString());
         return offerRepository.save(offer);
+    }
+
+    public LoanOffer updateOffer(String offerId, LoanOffer input, String actingUserId, java.util.Collection<? extends GrantedAuthority> authorities) {
+        LoanOffer offer = offerRepository.findById(offerId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Offer not found"));
+
+        validateOfferAccess(offer, actingUserId, authorities);
+
+        offer.setMinAmount(input.getMinAmount());
+        offer.setMaxAmount(input.getMaxAmount());
+        offer.setInterestRate(input.getInterestRate());
+        offer.setTenure(input.getTenure());
+        if (input.getStatus() != null) {
+            offer.setStatus(input.getStatus().toLowerCase(Locale.ROOT));
+        }
+
+        return offerRepository.save(offer);
+    }
+
+    public void deleteOffer(String offerId, String actingUserId, java.util.Collection<? extends GrantedAuthority> authorities) {
+        LoanOffer offer = offerRepository.findById(offerId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Offer not found"));
+
+        validateOfferAccess(offer, actingUserId, authorities);
+        offerRepository.deleteById(offerId);
     }
 
     public List<LoanApplication> getApplications() {
@@ -130,5 +158,18 @@ public class LoanService {
     private LoanApplication findApplication(String appId) {
         return applicationRepository.findById(appId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found"));
+    }
+
+    private void validateOfferAccess(LoanOffer offer, String actingUserId, java.util.Collection<? extends GrantedAuthority> authorities) {
+        Set<String> grantedAuthorities = authorities.stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toSet());
+
+        boolean isAdmin = grantedAuthorities.contains("ROLE_ADMIN");
+        boolean isOwner = offer.getLenderId() != null && offer.getLenderId().equals(actingUserId);
+
+        if (!isAdmin && !isOwner) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only modify your own offers");
+        }
     }
 }

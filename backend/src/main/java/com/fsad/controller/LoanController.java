@@ -43,6 +43,18 @@ public class LoanController {
         return loanService.createOffer(offer);
     }
 
+    @PutMapping("/offers/{id}")
+    @PreAuthorize("hasAnyRole('LENDER','ADMIN')")
+    public LoanOffer updateOffer(@PathVariable String id, @RequestBody LoanOffer offer, Authentication auth) {
+        return loanService.updateOffer(id, offer, String.valueOf(auth.getPrincipal()), auth.getAuthorities());
+    }
+
+    @DeleteMapping("/offers/{id}")
+    @PreAuthorize("hasAnyRole('LENDER','ADMIN')")
+    public void deleteOffer(@PathVariable String id, Authentication auth) {
+        loanService.deleteOffer(id, String.valueOf(auth.getPrincipal()), auth.getAuthorities());
+    }
+
     @GetMapping("/applications")
     public List<LoanApplication> applications() {
         return loanService.getApplications();

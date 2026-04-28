@@ -49,6 +49,15 @@ export const loanApi = {
     return data;
   },
 
+  async updateLoanOffer(offerId, payload) {
+    const { data } = await api.put(`/offers/${offerId}`, payload);
+    return data;
+  },
+
+  async deleteLoanOffer(offerId) {
+    await api.delete(`/offers/${offerId}`);
+  },
+
   async createLoanApplication(payload) {
     const { data } = await api.post('/applications', payload);
     return data;
@@ -78,6 +87,13 @@ export const adminApi = {
   async createUser(payload) {
     const { data } = await api.post('/admin/users', payload);
     return data;
+  },
+  async updateUser(userId, payload) {
+    const { data } = await api.put(`/admin/users/${userId}`, payload);
+    return data;
+  },
+  async deleteUser(userId) {
+    await api.delete(`/admin/users/${userId}`);
   },
 };
 

@@ -1,6 +1,7 @@
 package com.fsad.controller;
 
 import com.fsad.dto.AdminCreateUserRequest;
+import com.fsad.dto.AdminUpdateUserRequest;
 import com.fsad.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -33,5 +34,21 @@ public class AdminController {
                 request.getPassword(),
                 request.getRole()
         );
+    }
+
+    @PutMapping("/users/{userId}")
+    public Map<String, Object> updateUser(@PathVariable String userId, @Valid @RequestBody AdminUpdateUserRequest request) {
+        return authService.updateUserByAdmin(
+                userId,
+                request.getName(),
+                request.getEmail(),
+                request.getRole(),
+                request.getPassword()
+        );
+    }
+
+    @DeleteMapping("/users/{userId}")
+    public void deleteUser(@PathVariable String userId) {
+        authService.deleteUserByAdmin(userId);
     }
 }
