@@ -161,3 +161,25 @@ Quick conversion example:
   `DB_URL=jdbc:mysql://switchback.proxy.rlwy.net:56481/railway?useSSL=true&requireSSL=true&serverTimezone=UTC`
   plus `DB_USERNAME=root` and `DB_PASSWORD=<password>`.
 
+
+
+
+## Zero-touch deploy (preconfigured)
+
+This repo is now preconfigured with your provided production values:
+
+- Frontend URL: `https://2-2-fsad-frontend.vercel.app/`
+- Backend URL: `https://two-2-fsad-backend.onrender.com`
+- Railway public MySQL host: `switchback.proxy.rlwy.net:56481`
+- Railway DB name: `railway`
+
+So Render can deploy without manually adding DB/JWT/CORS variables.
+
+If you later rotate credentials, set these Render env vars to override defaults safely:
+
+- `DB_URL`
+- `DB_USERNAME`
+- `DB_PASSWORD`
+- `APP_JWT_SECRET`
+- `APP_CORS_ALLOWED_ORIGINS`
+
