@@ -2,19 +2,32 @@ import { useEffect, useState } from 'react';
 import { LoanContext } from './loanContextObject';
 import { loanApi } from '../services/api';
 
+const hasAuthToken = () => Boolean(localStorage.getItem('token'));
+
 export const LoanProvider = ({ children }) => {
   const [loans, setLoans] = useState([]);
   const [loanOffers, setLoanOffers] = useState([]);
   const [applications, setApplications] = useState([]);
 
   const refreshDashboardData = async () => {
-    const data = await loanApi.getDashboardData();
-    setLoans(data.loans);
-    setLoanOffers(data.loanOffers);
-    setApplications(data.applications);
+    if (!hasAuthToken()) return;
+
+    try {
+      const data = await loanApi.getDashboardData();
+      setLoans(data.loans);
+      setLoanOffers(data.loanOffers);
+      setApplications(data.applications);
+    } catch (error) {
+      if (error?.response?.status === 401 || error?.response?.status === 403) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      }
+    }
   };
 
   useEffect(() => {
+    if (!hasAuthToken()) return;
+
     refreshDashboardData();
 
     const intervalId = setInterval(() => {
