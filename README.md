@@ -71,6 +71,26 @@ Keep these for Render env vars:
 - `DB_USERNAME`
 - `DB_PASSWORD`
 
+
+### Railway values to copy (based on your screenshots)
+
+Use these Railway values for Render:
+
+- `DB_USERNAME` = value of `MYSQLUSER` (or `MYSQL_USER` if shown that way)
+- `DB_PASSWORD` = value of `MYSQL_ROOT_PASSWORD` (or `MYSQLPASSWORD`)
+- `DB_NAME` = value of `MYSQL_DATABASE`
+- `DB_HOST` = **public** host from `MYSQL_PUBLIC_URL` (for example `switchback.proxy.rlwy.net`)
+- `DB_PORT` = **public** port from `MYSQL_PUBLIC_URL` (for example `56481`)
+
+Then create `DB_URL` in JDBC format:
+
+```text
+jdbc:mysql://<DB_HOST>:<DB_PORT>/<DB_NAME>?useSSL=true&requireSSL=true&serverTimezone=UTC
+```
+
+Do **not** use `mysql.railway.internal` / `MYSQL_URL` on Render, because those private hostnames only work from services running inside Railway.
+
+
 ### Step B — Deploy backend to Render
 
 1. Create a **Web Service** in Render from this repo.
@@ -118,3 +138,26 @@ Then redeploy Render.
 - Never commit real DB credentials.
 - Never commit production JWT secrets.
 - Rotate secrets if they were ever exposed.
+
+
+---
+
+
+### If you see `Unable to determine Dialect without JDBC metadata`
+
+This almost always means Render received an invalid DB URL (usually `mysql://...` instead of `jdbc:mysql://...`) or missing DB env vars.
+
+Checklist in Render env vars:
+
+- `DB_URL` starts with `jdbc:mysql://`
+- `DB_USERNAME` is set
+- `DB_PASSWORD` is set
+- Host/port in `DB_URL` come from Railway **public** URL (not `mysql.railway.internal`)
+
+Quick conversion example:
+
+- Railway gives: `mysql://root:***@switchback.proxy.rlwy.net:56481/railway`
+- Render needs:
+  `DB_URL=jdbc:mysql://switchback.proxy.rlwy.net:56481/railway?useSSL=true&requireSSL=true&serverTimezone=UTC`
+  plus `DB_USERNAME=root` and `DB_PASSWORD=<password>`.
+
